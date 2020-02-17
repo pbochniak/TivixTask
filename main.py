@@ -9,7 +9,6 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.log import enable_pretty_logging
 
-
 db = SQLAlchemy()
 login_manager = LoginManager()
 
@@ -28,9 +27,22 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     with app.app_context():
-        from task import routes
+        from task.routes import usersBP, moviesBP
 
+        app.register_blueprint(usersBP, url_prefix="/api")
+        app.register_blueprint(moviesBP, url_prefix="/api")
+        from task.models import User
+
+        @login_manager.user_loader
+        def load_user(userID):
+            if userID is not None:
+                return User.query.get(uid=userID)
+            return None
+
+        print("A")
         db.create_all()
+        db.session.commit()
+        print("B")
     return app
 
 
